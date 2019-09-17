@@ -1,2 +1,2 @@
-include ':app'
+include ':common', ':clients', ':services'
 rootProject.name='android-service-client'
