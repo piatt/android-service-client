@@ -1,7 +1,7 @@
 package com.piatt.androidserviceclient.common;
 
 import com.piatt.androidserviceclient.common.IWeatherServiceCallback;
-import com.piatt.androidserviceclient.common.WeatherServiceState;
+import com.piatt.androidserviceclient.common.Weather;
 
 /**
  * AIDL interface used for IPC communication
@@ -20,9 +20,26 @@ interface IWeatherService {
      */
     oneway void unregister(IWeatherServiceCallback callback);
 
-    /**
-     * Returns the current WeatherService state
-     * as defined by the WeatherService backend
+    /*
+     * Triggers the backend to refresh latest weather data
      */
-    WeatherServiceState getWeatherServiceState();
+    oneway void updateWeather();
+
+    /**
+     * Returns the current weather
+     * as defined by the WeatherService backend
+     * for the given city
+     *
+     * @param city: string representation of a city name
+     */
+    Weather getCurrentWeatherForCity(in String city);
+
+    /**
+     * Returns a list of weather forecasts
+     * as defined by the WeatherService backend
+     * for the given city
+     *
+     * @param city: string representation of a city name
+     */
+    List<Weather> getForecastWeatherForCity(in String city);
 }

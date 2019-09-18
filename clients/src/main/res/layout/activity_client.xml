@@ -2,34 +2,63 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:padding="@dimen/default_margin"
     android:orientation="vertical"
-    android:gravity="center"
+    android:gravity="top|center"
     tools:context=".ClientActivity">
 
     <TextView
+        android:id="@+id/client_state_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"
-        android:text="Callback Result:"/>
+        android:text="@string/client_state"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
 
     <TextView
-        android:id="@+id/callback_state_view"
+        android:id="@+id/service_state_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
+        android:text="@string/service_state"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"/>
 
     <Button
-        android:id="@+id/state_button"
-        android:layout_width="wrap_content"
+        android:id="@+id/force_crash_button"
+        android:layout_width="@dimen/widget_width"
         android:layout_height="wrap_content"
-        android:text="Check State"/>
+        android:text="@string/force_crash"/>
+
+    <EditText
+        android:id="@+id/search_view"
+        android:layout_width="@dimen/widget_width"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:hint="@string/search_hint"/>
+
+    <Button
+        android:id="@+id/current_weather_button"
+        android:layout_width="@dimen/widget_width"
+        android:layout_height="wrap_content"
+        android:text="@string/current_weather"/>
+
+    <Button
+        android:id="@+id/forecast_weather_button"
+        android:layout_width="@dimen/widget_width"
+        android:layout_height="wrap_content"
+        android:text="@string/forecast_weather"/>
+
+    <Button
+        android:id="@+id/refresh_weather_button"
+        android:layout_width="@dimen/widget_width"
+        android:layout_height="wrap_content"
+        android:text="@string/refresh_weather"/>
 
     <TextView
-        android:id="@+id/button_state_view"
-        android:layout_width="wrap_content"
+        android:id="@+id/weather_view"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="16dp"/>
+        android:layout_margin="@dimen/default_margin"/>
 
 </LinearLayout>

@@ -16,7 +16,9 @@ android {
     }
     buildTypes {
         debug {
-//            buildConfigField "String", WEATHER_API_KEY, "ae90ca644af0da1e05a88c95efe8ad77"
+            Properties properties = new Properties()
+            properties.load(project.rootProject.file("local.properties").newDataInputStream())
+            buildConfigField 'String', "WEATHER_API_KEY", properties.getProperty("weather_api_key", "")
         }
         release {
             minifyEnabled false
@@ -31,4 +33,5 @@ android {
 
 dependencies {
     implementation project(":common")
+
 }

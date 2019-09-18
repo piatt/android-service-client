@@ -24,10 +24,9 @@
             android:exported="true"
             android:process=":WeatherService">
             <intent-filter>
-                <action android:name="com.piatt.androidserviceclient.services.RESTART" />
+                <action android:name="com.piatt.androidserviceclient.services.REFRESH" />
                 <action android:name="com.piatt.androidserviceclient.services.FORCE_CRASH" />
             </intent-filter>
         </service>
     </application>
-
 </manifest>

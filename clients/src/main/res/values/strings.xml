@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">Clients App</string>
+    <string name="client_state">Client State: %s</string>
+    <string name="service_state">Last Weather Update: %s</string>
+    <string name="force_crash">Force App Crash</string>
+    <string name="search_hint">Enter city name</string>
+    <string name="current_weather">Get Current Weather</string>
+    <string name="forecast_weather">Get Weather Forecast</string>
+    <string name="refresh_weather">Refresh Weather</string>
 </resources>

@@ -1,3 +1,3 @@
 package com.piatt.androidserviceclient.common;
 
-parcelable WeatherServiceState;
+parcelable Weather;

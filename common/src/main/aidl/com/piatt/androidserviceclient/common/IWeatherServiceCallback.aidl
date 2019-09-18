@@ -1,7 +1,5 @@
 package com.piatt.androidserviceclient.common;
 
-import com.piatt.androidserviceclient.common.WeatherServiceState;
-
 /**
  * AIDL callback interface used by the
  * IWeatherService AIDL interface to allow
@@ -9,8 +7,8 @@ import com.piatt.androidserviceclient.common.WeatherServiceState;
  */
 oneway interface IWeatherServiceCallback {
     /**
-     * Notifies receivers that WeatherService backend has been initialized or terminated,
+     * Notifies receivers of when the latest weather update was made,
      * allowing them to take appropriate steps i.e. using the API
      */
-    void onWeatherServiceStateChanged(in WeatherServiceState state);
+    void onWeatherUpdate(in long timestamp);
 }

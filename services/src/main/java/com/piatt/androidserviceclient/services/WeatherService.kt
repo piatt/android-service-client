@@ -11,17 +11,34 @@ import android.os.RemoteException
 import android.util.Log
 import android.app.NotificationManager
 import android.os.Build
-import com.piatt.androidserviceclient.common.ExceptionHandler
-import com.piatt.androidserviceclient.common.IWeatherService
-import com.piatt.androidserviceclient.common.IWeatherServiceCallback
-import com.piatt.androidserviceclient.common.WeatherServiceState
+import com.piatt.androidserviceclient.common.*
+import kotlinx.coroutines.*
+import java.util.*
+import kotlin.properties.Delegates
 
 class WeatherService : Service() {
+    private val scope = CoroutineScope(Dispatchers.Default + Job())
+
     /**
      * Dictates whether or not the service has been started,
      * and is used to determine whether binding clients should also start the service
      */
     private var serviceStarted = false
+
+    /**
+     * Timestamp in milliseconds representing completion of last weather data refresh
+     *
+     * When a new assignment is made to the state variable,
+     * the observable triggers an update to all callbacks with the new timestamp
+     *
+     * @see IWeatherServiceCallback.onWeatherUpdate
+     */
+    private var weatherUpdateTimestamp: Long by Delegates.observable(Date().time) {
+            _, _, newTimestamp -> run {
+            Log.d(TAG, "WeatherService last update timestamp changed to $newTimestamp")
+            notifyCallbacks { it.onWeatherUpdate(newTimestamp) }
+        }
+    }
 
     /**
      * Generic handler used to queue runnable operations synchronously
@@ -46,7 +63,7 @@ class WeatherService : Service() {
         override fun register(callback: IWeatherServiceCallback) {
             callbacks.register(callback)
             Log.d(TAG, "Registered callback with WeatherService")
-            callback.onWeatherServiceStateChanged(weatherServiceState)
+            callback.onWeatherUpdate(weatherUpdateTimestamp)
         }
 
         /**
@@ -58,16 +75,36 @@ class WeatherService : Service() {
         }
 
         /**
-         * @see IWeatherService.getWeatherServiceState
+         * @see IWeatherService.updateWeather
          */
-        override fun getWeatherServiceState() = if (serviceStarted) WeatherServiceState.STARTED else WeatherServiceState.STOPPED
+        override fun updateWeather() {
+            simulateWeatherUpdate()
+        }
+
+        /**
+         * @see IWeatherService.getCurrentWeatherForCity
+         */
+        override fun getCurrentWeatherForCity(city: String): Weather {
+            return Weather(Date().time, city, "Sunny", 75.5f)
+        }
+
+        /**
+         * @see IWeatherService.getForecastWeatherForCity
+         */
+        override fun getForecastWeatherForCity(city: String): List<Weather> {
+            return listOf(
+                Weather(Date().time, city, "Sunny", 75.5f),
+                Weather(Date().time, city, "Cloudy", 76.5f),
+                Weather(Date().time, city, "Rainy", 77.5f)
+            )
+        }
     }
 
     companion object {
         private const val TAG = "WeatherService"
         private const val NOTIFICATION_ID = 1
         private const val CHANNEL_ID = "WeatherServiceChannel"
-        private const val ACTION_RESTART = "com.piatt.androidserviceclient.services.RESTART"
+        private const val ACTION_REFRESH = "com.piatt.androidserviceclient.services.REFRESH"
         private const val ACTION_FORCE_CRASH = "com.piatt.androidserviceclient.services.FORCE_CRASH"
 
         /**
@@ -98,11 +135,6 @@ class WeatherService : Service() {
 
     override fun onBind(intent: Intent): IWeatherService.Stub {
         Log.d(TAG, "onBind() $intent")
-
-        if (!serviceStarted) {
-            Log.d(TAG, "Binding to un-started service which needs to be launched")
-            launch(this)
-        }
         return mBinder
     }
 
@@ -115,8 +147,8 @@ class WeatherService : Service() {
                 //TODO: Start WeatherService backend
             }
             intent.action != null -> when (intent.action) {
-                ACTION_RESTART -> { /*TODO: Restart WeatherService backend */ }
-                ACTION_FORCE_CRASH -> throw RuntimeException("CRASH TEST")
+                ACTION_REFRESH -> simulateWeatherUpdate()
+                ACTION_FORCE_CRASH -> GlobalScope.launch { throw RuntimeException("CRASH TEST") }
                 else -> Log.d(TAG, "Unknown start command action: ${intent.action}")
             }
             else -> stopSelf()
@@ -133,6 +165,18 @@ class WeatherService : Service() {
         tearDownService()
         Log.d(TAG, "WeatherService destroyed")
         super.onDestroy()
+    }
+
+    /**
+     * Without blocking the caller,
+     * simulates a 3 second refresh job,
+     * then updates the stored timestamp with the current time in milliseconds
+     */
+    private fun simulateWeatherUpdate() {
+        scope.launch {
+            delay(3000L)
+            weatherUpdateTimestamp = Date().time
+        }
     }
 
     private fun updateServiceState() {
@@ -170,8 +214,9 @@ class WeatherService : Service() {
 
     private fun tearDownService() {
         Log.d(TAG, "Tearing down WeatherService...")
-        //TODO: Stop WeatherService backend
+        scope.cancel()
         callbacks.kill()
+        stopForeground(true)
         serviceStarted = false
     }
 }

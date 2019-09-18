@@ -4,12 +4,12 @@ import android.content.Context
 import android.util.Log
 import com.piatt.androidserviceclient.common.ServiceClient.State
 import com.piatt.androidserviceclient.common.ServiceClient.StateCallback
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import java.util.*
 import kotlin.properties.Delegates
 
-/**
- *
- */
 class WeatherClient(
     private val context: Context,
     private val weatherServiceClient: ServiceClient<IWeatherService>
@@ -18,28 +18,11 @@ class WeatherClient(
     private val callbacks = mutableSetOf<WeatherClientCallback>()
 
     /**
-     * Current state of WeatherService backend
-     *
-     * When a new assignment is made to the state variable,
-     * the observable triggers the state change callback with the new state
-     * and triggers a potential update to ContentSections
-     *
-     * @see WeatherServiceState
-     */
-    private var weatherServiceState: WeatherServiceState by Delegates.observable(WeatherServiceState.STOPPED) {
-            _, _, newState -> run {
-            Log.d(TAG, "WeatherServiceState changed to $newState")
-            notifyCallbacks { it.onWeatherServiceStateChanged(newState) }
-            //TODO: Do anything else that a state change should trigger
-        }
-    }
-
-    /**
      * @see IWeatherServiceCallback
      */
     private val weatherServiceCallback = object : IWeatherServiceCallback.Stub() {
-        override fun onWeatherServiceStateChanged(state: WeatherServiceState) {
-            weatherServiceState = state
+        override fun onWeatherUpdate(timestamp: Long) {
+            notifyCallbacks { it.onWeatherUpdate(timestamp) }
         }
     }
 
@@ -58,12 +41,9 @@ class WeatherClient(
 
         weatherServiceClient.stateCallback = object : StateCallback {
             override fun onStateChanged(state: State) {
-                when (state) {
-                    State.DISCONNECTED,
-                    State.DISCONNECTED_BY_SERVICE,
-                    State.DISCONNECTED_BY_CLIENT,
-                    State.CONNECTING -> weatherServiceState = WeatherServiceState.STOPPED
-                    State.CONNECTED -> registerServiceCallback()
+                notifyCallbacks { it.onClientStateChanged(state) }
+                if (state == State.CONNECTED) {
+                    registerServiceCallback()
                 }
             }
         }
@@ -77,7 +57,7 @@ class WeatherClient(
     fun register(callback: WeatherClientCallback) {
         callbacks.add(callback)
         Log.d(TAG, "Registered callback ${callback.hashCode()} with WeatherClient")
-        callback.onWeatherServiceStateChanged(weatherServiceState)
+        //TODO: return current client state and weather update timestamp
     }
 
     /**
@@ -89,16 +69,30 @@ class WeatherClient(
     }
 
     /**
-     * @see IWeatherService.getWeatherServiceState
+     * @see IWeatherService.updateWeather
      */
-    fun isWeatherServiceRunning(): Boolean = runBlocking {
-        val state = weatherServiceClient.execute(defaultValue = WeatherServiceState.STOPPED) {
-            it.getWeatherServiceState()
-        }!!
-        when (state) {
-            WeatherServiceState.STARTED -> true
-            WeatherServiceState.STOPPED -> false
+    fun updateWeather() {
+        weatherServiceClient.execute("updateWeather()") {
+            it.updateWeather()
         }
+    }
+
+    /**
+     * @see IWeatherService.getCurrentWeatherForCity
+     */
+    suspend fun getCurrentWeatherForCity(city: String): Weather? {
+        return weatherServiceClient.execute(null, "getCurrentWeatherForCity($city)") {
+            it.getCurrentWeatherForCity(city)
+        }
+    }
+
+    /**
+     * @see IWeatherService.getForecastWeatherForCity
+     */
+    suspend fun getForecastWeatherForCity(city: String): List<Weather> {
+        return weatherServiceClient.execute(emptyList(), "getForecastWeatherForCity($city)") {
+            it.getForecastWeatherForCity(city)
+        }!!
     }
 
     /**
@@ -137,6 +131,8 @@ class WeatherClient(
      * @see IWeatherServiceCallback
      */
     interface WeatherClientCallback : IWeatherServiceCallback {
+        fun onClientStateChanged(state: State)
+
         override fun asBinder() = null
     }
 }
