@@ -80,17 +80,17 @@ class WeatherClient(
     /**
      * @see IWeatherService.getCurrentWeatherForCity
      */
-    suspend fun getCurrentWeatherForCity(city: String): Weather? {
-        return weatherServiceClient.execute(null, "getCurrentWeatherForCity($city)") {
+    suspend fun getCurrentWeatherForCity(city: String): String {
+        return weatherServiceClient.execute("No data found!", "getCurrentWeatherForCity($city)") {
             it.getCurrentWeatherForCity(city)
-        }
+        }!!
     }
 
     /**
      * @see IWeatherService.getForecastWeatherForCity
      */
-    suspend fun getForecastWeatherForCity(city: String): List<Weather> {
-        return weatherServiceClient.execute(emptyList(), "getForecastWeatherForCity($city)") {
+    suspend fun getForecastWeatherForCity(city: String): String {
+        return weatherServiceClient.execute("No data found!", "getForecastWeatherForCity($city)") {
             it.getForecastWeatherForCity(city)
         }!!
     }

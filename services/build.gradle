@@ -33,5 +33,7 @@ android {
 
 dependencies {
     implementation project(":common")
-
+    implementation 'com.squareup.retrofit2:retrofit:2.6.1'
+    implementation 'com.squareup.retrofit2:converter-scalars:2.6.1'
+    implementation 'com.squareup.retrofit2:converter-gson:2.6.1'
 }

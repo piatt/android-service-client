@@ -26,6 +26,11 @@ class WeatherService : Service() {
     private var serviceStarted = false
 
     /**
+     * Wrapper to the WeatherApi
+     */
+    private val weatherManager = WeatherManager()
+
+    /**
      * Timestamp in milliseconds representing completion of last weather data refresh
      *
      * When a new assignment is made to the state variable,
@@ -84,19 +89,15 @@ class WeatherService : Service() {
         /**
          * @see IWeatherService.getCurrentWeatherForCity
          */
-        override fun getCurrentWeatherForCity(city: String): Weather {
-            return Weather(Date().time, city, "Sunny", 75.5f)
+        override fun getCurrentWeatherForCity(city: String): String? = runBlocking {
+            weatherManager.weatherApi.getCurrentWeather(city)
         }
 
         /**
          * @see IWeatherService.getForecastWeatherForCity
          */
-        override fun getForecastWeatherForCity(city: String): List<Weather> {
-            return listOf(
-                Weather(Date().time, city, "Sunny", 75.5f),
-                Weather(Date().time, city, "Cloudy", 76.5f),
-                Weather(Date().time, city, "Rainy", 77.5f)
-            )
+        override fun getForecastWeatherForCity(city: String): String? = runBlocking {
+            weatherManager.weatherApi.getForecastWeather(city)
         }
     }
 
@@ -135,6 +136,11 @@ class WeatherService : Service() {
 
     override fun onBind(intent: Intent): IWeatherService.Stub {
         Log.d(TAG, "onBind() $intent")
+
+        if (!serviceStarted) {
+            Log.d(TAG, "Binding to un-started service which needs to be launched")
+            launch(this)
+        }
         return mBinder
     }
 
