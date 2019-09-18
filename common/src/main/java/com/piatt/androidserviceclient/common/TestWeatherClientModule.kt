@@ -41,16 +41,12 @@ class TestWeatherClientModule {
                     }
                 }
 
-                override fun getCurrentWeatherForCity(city: String): Weather {
-                    return Weather(Date().time, city, "Sunny", 75.5f)
+                override fun getCurrentWeatherForCity(city: String): String {
+                    return "Current Test Weather for $city"
                 }
 
-                override fun getForecastWeatherForCity(city: String): List<Weather> {
-                    return listOf(
-                        Weather(Date().time, city, "Sunny", 75.5f),
-                        Weather(Date().time, city, "Cloudy", 76.5f),
-                        Weather(Date().time, city, "Rainy", 77.5f)
-                    )
+                override fun getForecastWeatherForCity(city: String): String {
+                    return "Forecast Test Weather for $city"
                 }
             }
         }
